@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkDrop — Link Page QR Generator</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ===== Top Header (blue) ===== -->
+  <header class="topbar">
+    <button class="icon-only" aria-label="Menu">
+      <span class="bars"></span>
+      <span class="bars"></span>
+      <span class="bars"></span>
+    </button>
+    <div class="brand">
+      <span class="brand-mark">L</span>
+      <span class="brand-name">LINK<span class="accent">DROP</span></span>
+    </div>
+    <button id="themeToggle" class="icon-only round" aria-label="Toggle theme">
+      <span class="icon-sun">☀</span>
+      <span class="icon-moon">☾</span>
+    </button>
+  </header>
+
+  <!-- ===== Type tabs ===== -->
+  <nav class="types">
+    <div class="types-row">
+      <button class="type-tile"><span class="t-ico">🔗</span><span>URL</span></button>
+      <button class="type-tile"><span class="t-ico">👤</span><span>vCard</span></button>
+      <button class="type-tile"><span class="t-ico">📄</span><span>File</span></button>
+      <button class="type-tile active"><span class="t-ico">🌐</span><span>Link Page</span></button>
+      <button class="type-tile"><span class="t-ico">📝</span><span>Form</span></button>
+      <button class="type-tile"><span class="t-ico">☕</span><span>Menu</span></button>
+      <button class="type-tile"><span class="t-ico">🛍</span><span>App stores</span></button>
+      <button class="type-tile more"><span class="t-ico">+</span><span>More</span></button>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- ===== STEP 1 ===== -->
+    <section class="step-card">
+      <div class="step-head">
+        <span class="step-badge">STEP 1</span>
+        <h2>Set up your social media page or link page</h2>
+      </div>
+      <p class="hint"><span class="info-dot">i</span> Add buttons for each social profile or any custom link.</p>
+
+      <!-- Add platforms -->
+      <div class="panel">
+        <div class="panel-title"><span class="info-dot">i</span> Add Social Media or Links</div>
+        <div id="platformGrid" class="platform-grid"></div>
+        <div class="search-wrap">
+          <span class="search-ico">🔍</span>
+          <input id="platformSearch" type="text" placeholder="Search" />
+        </div>
+      </div>
+
+      <!-- Manage links -->
+      <div class="panel">
+        <div class="panel-title">
+          <span><span class="info-dot">i</span> Manage Links</span>
+          <span id="countBadge" class="count-badge">0</span>
+        </div>
+        <ul id="linkList" class="manage-list"></ul>
+        <p id="emptyState" class="empty">No links yet. Tap a platform above or use “Custom link”.</p>
+      </div>
+    </section>
+
+    <!-- ===== STEP 2 ===== -->
+    <section class="step-card">
+      <div class="step-head">
+        <span class="step-badge">STEP 2</span>
+        <h2>Generate &amp; share your QR code</h2>
+      </div>
+      <p class="hint"><span class="info-dot">i</span> Scan the QR to open your link page on any device.</p>
+
+      <div class="qr-panel">
+        <div class="qr-wrap">
+          <div id="qrcode" class="qrcode"></div>
+          <div id="qrPlaceholder" class="qr-placeholder">
+            <div class="qr-empty-grid"></div>
+            <p>Add a link to generate your QR</p>
+          </div>
+        </div>
+
+        <div class="qr-actions">
+          <button id="downloadBtn" class="btn primary" disabled>⬇ Download QR</button>
+          <button id="copyBtn" class="btn outline" disabled>🔗 Copy page link</button>
+          <a id="openPreview" class="btn outline" target="_blank" rel="noopener" aria-disabled="true">👁 Preview</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Built with HTML, CSS &amp; vanilla JS · Data stays in your browser</p>
+    </footer>
+  </main>
+
+  <!-- ===== Custom link / edit modal ===== -->
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">Add link</h3>
+        <button class="icon-only round" data-close="1" aria-label="Close">✕</button>
+      </div>
+      <form id="linkForm" class="modal-body">
+        <div class="field">
+          <label for="title">Button title</label>
+          <input type="text" id="title" placeholder="e.g. My Instagram" required maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="url">URL</label>
+          <input type="url" id="url" placeholder="https://example.com" required />
+        </div>
+        <input type="hidden" id="editIndex" value="-1" />
+        <input type="hidden" id="platformKey" value="" />
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" data-close="1">Cancel</button>
+          <button type="submit" id="submitBtn" class="btn primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

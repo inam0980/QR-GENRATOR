@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Links</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="public-page">
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+    <span class="icon-sun">☀</span>
+    <span class="icon-moon">☾</span>
+  </button>
+
+  <main class="public-wrap">
+    <div class="public-card">
+      <div class="avatar">
+        <span>★</span>
+      </div>
+      <h1 id="pageTitle">My Links</h1>
+      <p class="muted">Tap a button to visit</p>
+
+      <div id="publicLinks" class="public-links"></div>
+
+      <p id="noLinks" class="empty hidden">No links to show.</p>
+
+      <div class="public-footer">
+        <p>Made with <span class="heart">♥</span> using LinkDrop</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
