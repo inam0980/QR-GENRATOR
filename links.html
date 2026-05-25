@@ -7,32 +7,56 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body class="public-page">
-  <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+  <button id="themeToggle" class="theme-toggle-float" aria-label="Toggle theme">
     <span class="icon-sun">☀</span>
     <span class="icon-moon">☾</span>
   </button>
 
   <main class="public-wrap">
     <div class="public-card">
-      <div class="avatar">
-        <span>★</span>
-      </div>
+      <!-- Profile -->
+      <div class="avatar" id="avatar"><span>★</span></div>
       <h1 id="pageTitle">My Links</h1>
-      <p class="muted">Tap a button to visit</p>
+      <p class="muted" id="pageBio">Tap a button to visit</p>
 
+      <!-- Stats -->
+      <div class="stat-row" id="statRow">
+        <div class="stat">
+          <div class="stat-num" id="statCount">0</div>
+          <div class="stat-label">Links</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Reach</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-num">★</div>
+          <div class="stat-label">Verified</div>
+        </div>
+      </div>
+
+      <!-- Links -->
       <div id="publicLinks" class="public-links"></div>
-
       <p id="noLinks" class="empty hidden">No links to show.</p>
 
+      <!-- Share row -->
+      <div class="share-row" id="shareRow">
+        <button id="shareBtn" class="btn outline small">↗ Share page</button>
+        <button id="copyBtn" class="btn ghost small">📋 Copy link</button>
+      </div>
+
       <div class="public-footer">
-        <p>Made with <span class="heart">♥</span> using LinkDrop</p>
+        <p>Made with <span class="heart">♥</span> using <strong>LinkDrop</strong></p>
       </div>
     </div>
   </main>
 
+  <div id="toast" class="toast"></div>
   <script src="script.js"></script>
 </body>
 </html>

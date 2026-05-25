@@ -11,6 +11,61 @@
 </head>
 <body>
 
+  <!-- ===== Welcome / Login screen ===== -->
+  <div id="welcomeScreen" class="welcome hidden">
+    <div class="welcome-bg"></div>
+    <div class="welcome-card">
+      <div class="welcome-logo">
+        <span class="brand-mark big">L</span>
+      </div>
+      <h1 class="welcome-title">Welcome to <span class="accent-text">LinkDrop</span></h1>
+      <p class="welcome-sub">Sign up to get a token, or log back in with your 4-digit code.</p>
+
+      <!-- Tabs -->
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-tab="signup" type="button">Sign up</button>
+        <button class="auth-tab" data-tab="login" type="button">Log in</button>
+      </div>
+
+      <!-- Sign-up form -->
+      <form id="signupForm" class="welcome-form auth-pane">
+        <div class="field">
+          <label for="wName">Full name <span class="req">*</span></label>
+          <input type="text" id="wName" placeholder="e.g. Aisha Khan" required maxlength="40" autocomplete="name" />
+        </div>
+        <button type="submit" class="btn primary block">Create my account →</button>
+        <p class="welcome-foot">A 4-digit token will be generated. Save it to log in later.</p>
+      </form>
+
+      <!-- Log-in form -->
+      <form id="loginForm" class="welcome-form auth-pane hidden">
+        <div class="field">
+          <label for="wToken">Your 4-digit token <span class="req">*</span></label>
+          <input type="text" id="wToken" class="token-input" placeholder="• • • •" required
+                 inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" />
+        </div>
+        <button type="submit" class="btn primary block">Log in →</button>
+        <p id="loginError" class="auth-error hidden">No account found for that token.</p>
+        <p class="welcome-foot">Don't have one? Switch to "Sign up" above.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Token reveal modal (shown after sign-up) ===== -->
+  <div id="tokenModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card token-card">
+      <div class="token-celebrate">🎉</div>
+      <h3>You're all set!</h3>
+      <p class="muted">Save this token — you'll need it to log back in on this or another browser.</p>
+      <div class="token-display" id="tokenDisplay">0000</div>
+      <div class="modal-actions center">
+        <button id="copyTokenBtn" class="btn outline">📋 Copy token</button>
+        <button id="enterAppBtn" class="btn primary">Enter app →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Top Header (blue) ===== -->
   <header class="topbar">
     <button class="icon-only" aria-label="Menu">
@@ -22,10 +77,17 @@
       <span class="brand-mark">L</span>
       <span class="brand-name">LINK<span class="accent">DROP</span></span>
     </div>
-    <button id="themeToggle" class="icon-only round" aria-label="Toggle theme">
-      <span class="icon-sun">☀</span>
-      <span class="icon-moon">☾</span>
-    </button>
+    <div class="top-right">
+      <div id="userPill" class="user-pill hidden">
+        <span class="up-avatar" id="upAvatar">★</span>
+        <span class="up-name" id="upName">User</span>
+        <button id="logoutBtn" class="up-logout" title="Log out">⎋</button>
+      </div>
+      <button id="themeToggle" class="icon-only round" aria-label="Toggle theme">
+        <span class="icon-sun">☀</span>
+        <span class="icon-moon">☾</span>
+      </button>
+    </div>
   </header>
 
   <!-- ===== Type tabs ===== -->
@@ -44,11 +106,44 @@
 
   <main class="page">
 
-    <!-- ===== STEP 1 ===== -->
+    <!-- ===== STEP 1 — Profile ===== -->
     <section class="step-card">
       <div class="step-head">
         <span class="step-badge">STEP 1</span>
-        <h2>Set up your social media page or link page</h2>
+        <h2>Personalize your page</h2>
+      </div>
+      <p class="hint"><span class="info-dot">i</span> This appears at the top of your public link page.</p>
+
+      <div class="panel profile-panel">
+        <div class="profile-preview">
+          <div id="avatarPreview" class="avatar-pv">★</div>
+          <div class="profile-pv-meta">
+            <div id="namePreview" class="pv-name">My Links</div>
+            <div id="bioPreview" class="pv-bio">Tap a button to visit</div>
+          </div>
+        </div>
+        <div class="profile-form">
+          <div class="field">
+            <label for="pageName">Display name</label>
+            <input type="text" id="pageName" placeholder="e.g. Aisha Khan" maxlength="40" />
+          </div>
+          <div class="field">
+            <label for="pageBio">Short bio</label>
+            <input type="text" id="pageBio" placeholder="Designer · Creator · Coffee lover" maxlength="80" />
+          </div>
+          <div class="field">
+            <label for="pageAvatar">Avatar (emoji or 1–2 letters)</label>
+            <input type="text" id="pageAvatar" placeholder="★ or AK" maxlength="2" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== STEP 2 — Links ===== -->
+    <section class="step-card">
+      <div class="step-head">
+        <span class="step-badge">STEP 2</span>
+        <h2>Add your social media &amp; links</h2>
       </div>
       <p class="hint"><span class="info-dot">i</span> Add buttons for each social profile or any custom link.</p>
 
@@ -73,10 +168,10 @@
       </div>
     </section>
 
-    <!-- ===== STEP 2 ===== -->
+    <!-- ===== STEP 3 — QR ===== -->
     <section class="step-card">
       <div class="step-head">
-        <span class="step-badge">STEP 2</span>
+        <span class="step-badge">STEP 3</span>
         <h2>Generate &amp; share your QR code</h2>
       </div>
       <p class="hint"><span class="info-dot">i</span> Scan the QR to open your link page on any device.</p>
