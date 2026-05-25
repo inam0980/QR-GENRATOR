@@ -181,32 +181,88 @@ button { font-family: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Token reveal modal */
+/* Token reveal modal — must sit above the welcome screen (z-index 500) */
+#tokenModal { z-index: 700; }
 .token-card {
   text-align: center;
   padding: 28px 22px 22px;
+  max-width: 460px;
 }
-.token-celebrate { font-size: 42px; margin-bottom: 8px; animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.token-card h3 { font-size: 1.25rem; margin-bottom: 6px; }
+.token-celebrate { font-size: 48px; margin-bottom: 6px; animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.token-card h3 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.token-warn {
+  background: rgba(255, 122, 24, 0.1);
+  border-left: 3px solid var(--orange);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: left;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.token-warn strong { color: var(--orange); }
+
+.token-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
 .token-display {
   font-family: 'Poppins', monospace;
-  font-size: 2.6rem;
+  font-size: 3.2rem;
   font-weight: 800;
   letter-spacing: 0.4em;
-  padding: 18px 0;
-  margin: 16px 0 18px;
+  padding: 22px 0;
+  margin: 6px 0 14px;
   background: linear-gradient(135deg, var(--orange-soft), rgba(30,108,245,0.08));
   border: 2px dashed var(--orange);
   border-radius: 16px;
   color: var(--orange);
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 [data-theme="dark"] .token-display { color: var(--orange-2); }
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 122, 24, 0.4); }
+  50%      { box-shadow: 0 0 0 12px rgba(255, 122, 24, 0); }
+}
+
+.token-tips {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-bottom: 18px;
+}
+
 .modal-actions.center { justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 520px) {
+  .up-name { display: none; }
+  .profile-menu { width: 280px; }
+}
 
 /* ============================================
    Top right cluster + user pill
    ============================================ */
 .top-right { display: flex; align-items: center; gap: 8px; }
+
+.user-pill-wrap { position: relative; }
 
 .user-pill {
   display: flex;
@@ -214,15 +270,22 @@ button { font-family: inherit; }
   gap: 8px;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 4px 6px 4px 4px;
+  padding: 4px 12px 4px 4px;
   border-radius: 999px;
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
+  cursor: pointer;
   transition: background var(--transition);
 }
 .user-pill.hidden { display: none; }
 .user-pill:hover { background: rgba(255, 255, 255, 0.3); }
+.up-caret {
+  font-size: 10px;
+  opacity: 0.85;
+  transition: transform var(--transition);
+}
+.user-pill[aria-expanded="true"] .up-caret { transform: rotate(180deg); }
 
 .up-avatar {
   width: 26px;
@@ -236,27 +299,150 @@ button { font-family: inherit; }
   color: #fff;
 }
 .up-name {
-  max-width: 90px;
+  max-width: 110px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (max-width: 480px) { .up-name { max-width: 60px; } }
+@media (max-width: 480px) { .up-name { max-width: 70px; } }
 
-.up-logout {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: #fff;
-  width: 24px;
-  height: 24px;
+/* ============================================
+   Profile dropdown menu
+   ============================================ */
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(20, 30, 60, 0.25);
+  padding: 16px;
+  z-index: 80;
+  animation: dropIn 0.22s ease;
+  border: 1px solid var(--border);
+}
+.profile-menu.hidden { display: none; }
+.profile-menu::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pm-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 12px;
+}
+.pm-avatar {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  cursor: pointer;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
   display: grid;
   place-items: center;
-  font-size: 13px;
-  transition: background var(--transition), transform var(--transition);
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(255, 122, 24, 0.3);
+  flex-shrink: 0;
 }
-.up-logout:hover { background: #e54848; transform: rotate(20deg); }
+.pm-meta { min-width: 0; }
+.pm-name {
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pm-bio {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-token-row {
+  background: linear-gradient(135deg, var(--orange-soft), rgba(30,108,245,0.05));
+  border: 1px dashed var(--orange);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pm-token-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text-soft);
+  text-transform: uppercase;
+}
+.pm-token-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pm-token-value #pmToken {
+  font-family: 'Poppins', monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--orange);
+}
+
+.pm-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.pm-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.pm-fields { display: flex; flex-direction: column; gap: 10px; }
+
+.pm-logout {
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-soft);
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.pm-logout:hover {
+  background: #ffe5e5;
+  color: #e54848;
+  border-color: #e54848;
+}
+[data-theme="dark"] .pm-logout:hover { background: #3a1a1a; }
 
 /* ============================================
    Top blue header
@@ -837,38 +1023,6 @@ button { font-family: inherit; }
   font-size: 0.82rem;
   padding-top: 8px;
 }
-
-/* ============================================
-   Profile panel (admin)
-   ============================================ */
-.profile-panel { padding: 16px; }
-.profile-preview {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-  background: linear-gradient(135deg, rgba(255,122,24,0.08), rgba(30,108,245,0.06));
-  border: 1px dashed var(--border);
-  border-radius: 14px;
-  margin-bottom: 14px;
-}
-.avatar-pv {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--orange), var(--orange-2));
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 22px;
-  box-shadow: 0 4px 14px rgba(255, 122, 24, 0.3);
-  flex-shrink: 0;
-}
-.profile-pv-meta { min-width: 0; }
-.pv-name { font-weight: 700; font-size: 1rem; }
-.pv-bio { font-size: 0.85rem; color: var(--text-soft); }
-.profile-form { display: flex; flex-direction: column; gap: 10px; }
 
 /* ============================================
    Theme toggle (public page, floating)

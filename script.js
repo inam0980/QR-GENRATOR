@@ -339,25 +339,58 @@
     const newCopy = copyBtn.cloneNode(true);
     copyBtn.parentNode.replaceChild(newCopy, copyBtn);
     newCopy.addEventListener('click', function () {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(token).then(function () { showToast('Token copied!'); });
-      } else {
-        const ta = document.createElement('textarea');
-        ta.value = token; document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); showToast('Token copied!'); } catch (e) {}
-        document.body.removeChild(ta);
-      }
+      copyText(token, 'Token copied!');
     });
 
     const newEnter = enterBtn.cloneNode(true);
     enterBtn.parentNode.replaceChild(newEnter, enterBtn);
+
+    // 10-second countdown — user majboor ho token yaad karne ko
+    let remaining = 10;
+    newEnter.disabled = true;
+    newEnter.textContent = 'Enter app (' + remaining + 's)';
+    const timer = setInterval(function () {
+      remaining -= 1;
+      if (remaining > 0) {
+        newEnter.textContent = 'Enter app (' + remaining + 's)';
+      } else {
+        clearInterval(timer);
+        newEnter.disabled = false;
+        newEnter.textContent = 'I have saved my token →';
+      }
+    }, 1000);
+
     newEnter.addEventListener('click', function () {
+      if (newEnter.disabled) return;
+      clearInterval(timer);
       modal.classList.add('hidden');
       onContinue();
     });
   }
 
-  /* ---------- User pill + logout ---------- */
+  /* ---------- Clipboard helper ---------- */
+  function copyText(text, successMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(function () { showToast(successMsg || 'Copied!'); })
+        .catch(function () { legacyCopyHelper(text, successMsg); });
+    } else {
+      legacyCopyHelper(text, successMsg);
+    }
+  }
+  function legacyCopyHelper(text, successMsg) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast(successMsg || 'Copied!'); }
+    catch (e) { showToast('Could not copy'); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- User pill + dropdown + logout ---------- */
   function refreshUserPill() {
     const pill = document.getElementById('userPill');
     if (!pill) return;
@@ -366,8 +399,58 @@
     pill.classList.remove('hidden');
     document.getElementById('upName').textContent = p.name;
     document.getElementById('upAvatar').textContent = p.avatar;
-    pill.title = token ? ('Token: ' + token) : '';
+
+    const pmName = document.getElementById('pmName');
+    const pmBio = document.getElementById('pmBio');
+    const pmAvatar = document.getElementById('pmAvatar');
+    const pmToken = document.getElementById('pmToken');
+    if (pmName) pmName.textContent = p.name;
+    if (pmBio) pmBio.textContent = p.bio;
+    if (pmAvatar) pmAvatar.textContent = p.avatar;
+    if (pmToken) pmToken.textContent = token || '----';
+
+    bindProfileMenu();
   }
+
+  function bindProfileMenu() {
+    const pill = document.getElementById('userPill');
+    const menu = document.getElementById('profileMenu');
+    if (!pill || !menu || pill.dataset.bound) return;
+    pill.dataset.bound = '1';
+
+    pill.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const open = !menu.classList.contains('hidden');
+      if (open) closeMenu(); else openMenu();
+    });
+
+    menu.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    document.addEventListener('click', function () { closeMenu(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    function openMenu() {
+      menu.classList.remove('hidden');
+      pill.setAttribute('aria-expanded', 'true');
+    }
+    function closeMenu() {
+      menu.classList.add('hidden');
+      pill.setAttribute('aria-expanded', 'false');
+    }
+
+    // Copy token from inside the menu
+    const copyTokenBtn = document.getElementById('pmCopyToken');
+    if (copyTokenBtn && !copyTokenBtn.dataset.bound) {
+      copyTokenBtn.dataset.bound = '1';
+      copyTokenBtn.addEventListener('click', function () {
+        const t = getCurrentToken();
+        if (t) copyText(t, 'Token ' + t + ' copied!');
+      });
+    }
+  }
+
   function bindLogout() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (!logoutBtn || logoutBtn.dataset.bound) return;
@@ -414,19 +497,16 @@
     let links = loadLinks();
     let profile = loadProfile();
 
-    /* ---- Profile fields ---- */
+    /* ---- Profile fields (live in the dropdown menu now) ---- */
     const pageName = document.getElementById('pageName');
     const pageBio = document.getElementById('pageBio');
     const pageAvatar = document.getElementById('pageAvatar');
-    const namePreview = document.getElementById('namePreview');
-    const bioPreview = document.getElementById('bioPreview');
-    const avatarPreview = document.getElementById('avatarPreview');
 
     if (pageName) {
-      pageName.value = profile.name === DEFAULT_PROFILE.name ? '' : profile.name;
-      pageBio.value = profile.bio === DEFAULT_PROFILE.bio ? '' : profile.bio;
-      pageAvatar.value = profile.avatar === DEFAULT_PROFILE.avatar ? '' : profile.avatar;
-      refreshProfilePreview();
+      pageName.value = profile.name || '';
+      pageBio.value = (profile.bio && profile.bio !== DEFAULT_PROFILE.bio) ? profile.bio : '';
+      pageAvatar.value = profile.avatar || '';
+      refreshProfileUi();
 
       [pageName, pageBio, pageAvatar].forEach(function (el) {
         el.addEventListener('input', function () {
@@ -436,21 +516,23 @@
             avatar: pageAvatar.value.trim() || DEFAULT_PROFILE.avatar
           };
           saveProfile(profile);
-          refreshProfilePreview();
+          refreshProfileUi();
           updateQr();
         });
       });
     }
 
-    function refreshProfilePreview() {
-      namePreview.textContent = profile.name;
-      bioPreview.textContent = profile.bio;
-      avatarPreview.textContent = profile.avatar;
-      // Keep header pill in sync
+    function refreshProfileUi() {
       const upName = document.getElementById('upName');
       const upAvatar = document.getElementById('upAvatar');
+      const pmName = document.getElementById('pmName');
+      const pmBio = document.getElementById('pmBio');
+      const pmAvatar = document.getElementById('pmAvatar');
       if (upName) upName.textContent = profile.name;
       if (upAvatar) upAvatar.textContent = profile.avatar;
+      if (pmName) pmName.textContent = profile.name;
+      if (pmBio) pmBio.textContent = profile.bio;
+      if (pmAvatar) pmAvatar.textContent = profile.avatar;
     }
 
     /* ---- Render platform grid ---- */
