@@ -19,7 +19,7 @@
         <span class="brand-mark big">L</span>
       </div>
       <h1 class="welcome-title">Welcome to <span class="accent-text">LinkDrop</span></h1>
-      <p class="welcome-sub">Sign up to get a token, or log back in with your 4-digit code.</p>
+      <p class="welcome-sub">Sign up to get a token, or log back in with your 2-digit code.</p>
 
       <!-- Tabs -->
       <div class="auth-tabs" role="tablist">
@@ -33,19 +33,26 @@
           <label for="wName">Full name <span class="req">*</span></label>
           <input type="text" id="wName" placeholder="e.g. Aisha Khan" required maxlength="40" autocomplete="name" />
         </div>
+        <div class="field">
+          <label for="wUsername">Username <span class="req">*</span></label>
+          <input type="text" id="wUsername" placeholder="e.g. abc123" required
+                 maxlength="20" autocomplete="username" />
+          <small class="field-hint">3–20 chars · must mix letters &amp; numbers</small>
+        </div>
         <button type="submit" class="btn primary block">Create my account →</button>
-        <p class="welcome-foot">A 4-digit token will be generated. Save it to log in later.</p>
+        <p class="welcome-foot">A 2-digit token will also be generated for backup login.</p>
       </form>
 
       <!-- Log-in form -->
       <form id="loginForm" class="welcome-form auth-pane hidden">
         <div class="field">
-          <label for="wToken">Your 4-digit token <span class="req">*</span></label>
-          <input type="text" id="wToken" class="token-input" placeholder="• • • •" required
-                 inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" />
+          <label for="wLoginId">Username or token <span class="req">*</span></label>
+          <input type="text" id="wLoginId" placeholder="abc123  or  42" required
+                 maxlength="20" autocomplete="username" />
+          <small class="field-hint">Enter your username, or your 2-digit token.</small>
         </div>
         <button type="submit" class="btn primary block">Log in →</button>
-        <p id="loginError" class="auth-error hidden">No account found for that token.</p>
+        <p id="loginError" class="auth-error hidden">No account found. Check your username or token.</p>
         <p class="welcome-foot">Don't have one? Switch to "Sign up" above.</p>
       </form>
     </div>
@@ -107,10 +114,16 @@
           </div>
 
           <div class="pm-token-row">
-            <div class="pm-token-label">Your login token</div>
-            <div class="pm-token-value">
-              <span id="pmToken">0000</span>
-              <button id="pmCopyToken" class="icon-btn" title="Copy token">📋</button>
+            <div>
+              <div class="pm-token-label">Username</div>
+              <div class="pm-username" id="pmUsername">—</div>
+            </div>
+            <div>
+              <div class="pm-token-label">Token</div>
+              <div class="pm-token-value">
+                <span id="pmToken">00</span>
+                <button id="pmCopyToken" class="icon-btn" title="Copy token">📋</button>
+              </div>
             </div>
           </div>
 
@@ -211,6 +224,25 @@
           <button id="copyBtn" class="btn outline" disabled>🔗 Copy page link</button>
           <a id="openPreview" class="btn outline" target="_blank" rel="noopener" aria-disabled="true">👁 Preview</a>
         </div>
+        <button id="saveSnapshotBtn" class="btn save-snap" disabled>💾 Save this QR &amp; start new</button>
+      </div>
+    </section>
+
+    <!-- ===== STEP 3 — Saved QRs (history) ===== -->
+    <section class="step-card">
+      <div class="step-head">
+        <span class="step-badge">STEP 3</span>
+        <h2>Saved QR codes</h2>
+      </div>
+      <p class="hint"><span class="info-dot">i</span> Every saved QR gets a transaction ID so you can find it later.</p>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span><span class="info-dot">i</span> Your history</span>
+          <span id="snapCount" class="count-badge">0</span>
+        </div>
+        <ul id="snapshotList" class="snapshot-list"></ul>
+        <p id="snapEmpty" class="empty">No saved QRs yet. Build your links above and tap “Save this QR” to keep it here.</p>
       </div>
     </section>
 
@@ -243,6 +275,31 @@
           <button type="submit" id="submitBtn" class="btn primary">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===== View Snapshot modal ===== -->
+  <div id="viewSnapModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-snap="1"></div>
+    <div class="modal-card snap-card">
+      <div class="modal-head">
+        <h3 id="snapModalTitle">QR-XXXXX</h3>
+        <button class="icon-only round" data-close-snap="1" aria-label="Close">✕</button>
+      </div>
+      <div class="snap-body">
+        <div class="snap-meta">
+          <div class="snap-meta-row"><span>📅 Saved</span><span id="snapModalDate">—</span></div>
+          <div class="snap-meta-row"><span>🔗 Links</span><span id="snapModalCount">0</span></div>
+        </div>
+        <div class="qr-wrap">
+          <div id="snapQrcode" class="qrcode show"></div>
+        </div>
+        <div class="qr-actions">
+          <button id="snapDownloadBtn" class="btn primary">⬇ Download</button>
+          <button id="snapCopyBtn" class="btn outline">🔗 Copy link</button>
+          <a id="snapOpenBtn" class="btn outline" target="_blank" rel="noopener">👁 Open</a>
+        </div>
+      </div>
     </div>
   </div>
 

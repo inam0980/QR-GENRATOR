@@ -125,6 +125,12 @@ button { font-family: inherit; }
 .welcome-form .field label { display: flex; gap: 6px; align-items: center; }
 .req { color: var(--orange); font-weight: 700; }
 .opt { color: var(--text-soft); font-weight: 400; font-size: 0.78rem; }
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
 
 .btn.block { width: 100%; margin-top: 6px; padding: 14px 20px; font-size: 1rem; }
 
@@ -170,6 +176,18 @@ button { font-family: inherit; }
   animation: pop 0.25s ease;
 }
 .auth-error.hidden { display: none; }
+
+/* Red error state on inputs */
+.input-error {
+  border-color: #e54848 !important;
+  box-shadow: 0 0 0 3px rgba(229, 72, 72, 0.15) !important;
+  animation: shake 0.32s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
 
 /* Token input — large, spaced, monospace */
 .token-input {
@@ -406,6 +424,13 @@ button { font-family: inherit; }
   font-weight: 800;
   letter-spacing: 0.2em;
   color: var(--orange);
+}
+.pm-username {
+  font-family: 'Poppins', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 2px;
 }
 
 .pm-divider {
@@ -898,6 +923,104 @@ button { font-family: inherit; }
   gap: 10px;
   width: 100%;
 }
+
+/* Save snapshot button (sits below the QR action row) */
+.btn.save-snap {
+  margin-top: 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1.5px dashed var(--orange);
+  width: 100%;
+  max-width: 320px;
+}
+.btn.save-snap:hover:not(:disabled) {
+  background: var(--orange-soft);
+  border-style: solid;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   Snapshot (saved QR) list
+   ============================================ */
+.snapshot-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+.snapshot-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  animation: pop 0.3s ease both;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+.snapshot-item:hover {
+  border-color: var(--orange);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.snap-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 122, 24, 0.25);
+}
+
+.snap-info { min-width: 0; }
+.snap-id {
+  font-family: 'Poppins', monospace;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.snap-sub {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-top: 3px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.snap-sub .chip {
+  background: var(--surface-2);
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.snap-actions { display: flex; gap: 4px; }
+
+/* View snapshot modal */
+.snap-card { max-width: 460px; }
+.snap-body { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.snap-meta {
+  width: 100%;
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.snap-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  padding: 4px 0;
+}
+.snap-meta-row span:last-child { color: var(--text); font-weight: 600; }
+.snap-card .qr-wrap { min-width: 240px; min-height: 240px; }
 
 /* ============================================
    Buttons

@@ -65,12 +65,34 @@
   }
   function generateToken() {
     const users = loadUsers();
-    for (let i = 0; i < 200; i++) {
-      const t = String(Math.floor(1000 + Math.random() * 9000));
+    // 2-digit token: 00–99 (zero-padded), 100 possible slots
+    for (let i = 0; i < 300; i++) {
+      const n = Math.floor(Math.random() * 100);
+      const t = (n < 10 ? '0' : '') + n;
       if (!users[t]) return t;
     }
-    // Extremely unlikely: 9000 slots exhausted
-    return String(Date.now()).slice(-4);
+    return String(Date.now()).slice(-2);
+  }
+
+  /* ---------- Username helpers ---------- */
+  function isValidUsername(u) {
+    if (!u) return false;
+    // 3–20 chars, alphanumeric, must contain at least one letter AND one digit
+    if (!/^[a-zA-Z0-9]{3,20}$/.test(u)) return false;
+    if (!/[a-zA-Z]/.test(u)) return false;
+    if (!/[0-9]/.test(u)) return false;
+    return true;
+  }
+  function findTokenByUsername(uname) {
+    const target = (uname || '').toLowerCase();
+    const users = loadUsers();
+    for (const tk in users) {
+      if (users[tk] && (users[tk].username || '').toLowerCase() === target) return tk;
+    }
+    return '';
+  }
+  function isUsernameTaken(uname) {
+    return !!findTokenByUsername(uname);
   }
 
   /* ---------- One-time migration from legacy single-user ---------- */
@@ -82,7 +104,8 @@
       const profile = JSON.parse(localStorage.getItem(LEGACY_PROFILE_KEY) || 'null');
       const links = JSON.parse(localStorage.getItem(LEGACY_LINKS_KEY) || '[]');
       if (!profile) return;
-      const token = String(Math.floor(1000 + Math.random() * 9000));
+      const n = Math.floor(Math.random() * 100);
+      const token = (n < 10 ? '0' : '') + n;
       const users = {};
       users[token] = {
         name: profile.name || 'User',
@@ -155,6 +178,27 @@
   }
   function saveProfile(p) {
     updateCurrentUser({ profile: p, name: p.name });
+  }
+  function loadSnapshots() {
+    const u = getCurrentUser();
+    return (u && Array.isArray(u.snapshots)) ? u.snapshots : [];
+  }
+  function saveSnapshots(snaps) {
+    updateCurrentUser({ snapshots: snaps });
+  }
+  function generateSnapshotId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // unambiguous
+    let s = '';
+    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return 'QR-' + s;
+  }
+  function formatDate(ts) {
+    try {
+      const d = new Date(ts);
+      const pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+             ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    } catch (e) { return ''; }
   }
 
   /* ---------- URL encoding for QR ----------
@@ -241,7 +285,8 @@
     const signupPane = document.getElementById('signupForm');
     const loginPane = document.getElementById('loginForm');
     const wName = document.getElementById('wName');
-    const wToken = document.getElementById('wToken');
+    const wUsername = document.getElementById('wUsername');
+    const wLoginId = document.getElementById('wLoginId');
     const loginError = document.getElementById('loginError');
 
     tabs.forEach(function (tab) {
@@ -252,29 +297,58 @@
         loginPane.classList.toggle('hidden', which !== 'login');
         loginError.classList.add('hidden');
         setTimeout(function () {
-          (which === 'signup' ? wName : wToken).focus();
+          (which === 'signup' ? wName : wLoginId).focus();
         }, 50);
       });
     });
 
     setTimeout(function () { wName.focus(); }, 100);
 
-    // Token input — digits only
-    wToken.addEventListener('input', function () {
-      wToken.value = wToken.value.replace(/\D/g, '').slice(0, 4);
+    // Strip spaces and special chars as user types username
+    wUsername.addEventListener('input', function () {
+      wUsername.value = wUsername.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+      wUsername.classList.remove('input-error');
+    });
+    wLoginId.addEventListener('input', function () {
+      wLoginId.value = wLoginId.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+      wLoginId.classList.remove('input-error');
       loginError.classList.add('hidden');
     });
 
     // ---- Sign up ----
-    signupPane.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const name = wName.value.trim();
-      if (!name) { wName.focus(); return; }
+    let signingUp = false;
+    function handleSignup() {
+      if (signingUp) return;
+      const name = (wName.value || '').trim();
+      const username = (wUsername.value || '').trim();
+
+      if (!name) {
+        wName.focus();
+        wName.classList.add('input-error');
+        showToast('Please enter your name');
+        return;
+      }
+      if (!isValidUsername(username)) {
+        wUsername.focus();
+        wUsername.classList.add('input-error');
+        showToast('Username needs 3–20 chars with both letters & digits');
+        return;
+      }
+      if (isUsernameTaken(username)) {
+        wUsername.focus();
+        wUsername.classList.add('input-error');
+        showToast('Username already taken — try another');
+        return;
+      }
+      signingUp = true;
+      wName.classList.remove('input-error');
+      wUsername.classList.remove('input-error');
 
       const token = generateToken();
       const users = loadUsers();
       users[token] = {
         name: name,
+        username: username,
         profile: {
           name: name,
           bio: 'Tap a button to visit',
@@ -287,29 +361,55 @@
       setCurrentToken(token);
 
       showTokenModal(token, function () {
+        signingUp = false;
         dismissWelcome();
         showToast('Welcome, ' + name.split(' ')[0] + '!');
       });
-    });
+    }
+    signupPane.addEventListener('submit', function (e) { e.preventDefault(); handleSignup(); });
+    const signupBtn = signupPane.querySelector('button[type="submit"]');
+    if (signupBtn) {
+      signupBtn.addEventListener('click', function (e) { e.preventDefault(); handleSignup(); });
+    }
+    wName.addEventListener('input', function () { wName.classList.remove('input-error'); });
 
-    // ---- Log in ----
-    loginPane.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const token = wToken.value.trim();
-      if (!/^\d{4}$/.test(token)) { wToken.focus(); return; }
-
+    // ---- Log in (username OR 2-digit token) ----
+    function handleLogin() {
+      const raw = (wLoginId.value || '').trim();
+      if (!raw) {
+        wLoginId.focus();
+        wLoginId.classList.add('input-error');
+        showToast('Enter your username or token');
+        return;
+      }
       const users = loadUsers();
-      if (!users[token]) {
+      let token = '';
+
+      // 2-digit numeric input → treat as token
+      if (/^\d{2}$/.test(raw) && users[raw]) {
+        token = raw;
+      } else {
+        // Otherwise try username lookup (case-insensitive)
+        token = findTokenByUsername(raw);
+      }
+
+      if (!token || !users[token]) {
         loginError.classList.remove('hidden');
-        wToken.focus();
-        wToken.select();
+        wLoginId.classList.add('input-error');
+        wLoginId.focus();
+        wLoginId.select();
         return;
       }
       setCurrentToken(token);
       dismissWelcome();
       const u = users[token];
       showToast('Welcome back, ' + (u.name || 'friend').split(' ')[0] + '!');
-    });
+    }
+    loginPane.addEventListener('submit', function (e) { e.preventDefault(); handleLogin(); });
+    const loginBtn = loginPane.querySelector('button[type="submit"]');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', function (e) { e.preventDefault(); handleLogin(); });
+    }
 
     function dismissWelcome() {
       screen.style.opacity = '0';
@@ -404,10 +504,13 @@
     const pmBio = document.getElementById('pmBio');
     const pmAvatar = document.getElementById('pmAvatar');
     const pmToken = document.getElementById('pmToken');
+    const pmUsername = document.getElementById('pmUsername');
+    const u = getCurrentUser();
     if (pmName) pmName.textContent = p.name;
     if (pmBio) pmBio.textContent = p.bio;
     if (pmAvatar) pmAvatar.textContent = p.avatar;
-    if (pmToken) pmToken.textContent = token || '----';
+    if (pmToken) pmToken.textContent = token || '--';
+    if (pmUsername) pmUsername.textContent = (u && u.username) ? u.username : '—';
 
     bindProfileMenu();
   }
@@ -483,6 +586,10 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const copyBtn = document.getElementById('copyBtn');
     const openPreview = document.getElementById('openPreview');
+    const saveSnapBtn = document.getElementById('saveSnapshotBtn');
+    const snapList = document.getElementById('snapshotList');
+    const snapEmpty = document.getElementById('snapEmpty');
+    const snapCount = document.getElementById('snapCount');
 
     // Modal
     const modal = document.getElementById('modal');
@@ -582,7 +689,10 @@
 
     /* ---- QR ---- */
     function updateQr() {
-      if (links.length === 0) {
+      const hasLinks = links.length > 0;
+      if (saveSnapBtn) saveSnapBtn.disabled = !hasLinks;
+
+      if (!hasLinks) {
         qrEl.innerHTML = '';
         qrEl.classList.remove('show');
         qrPlaceholder.classList.remove('hidden');
@@ -609,6 +719,130 @@
       openPreview.setAttribute('aria-disabled', 'false');
       openPreview.href = url;
     }
+
+    /* ---- Snapshots (saved QR history) ---- */
+    function renderSnapshots() {
+      const snaps = loadSnapshots();
+      snapList.innerHTML = '';
+      snaps.slice().reverse().forEach(function (snap) {
+        const li = document.createElement('li');
+        li.className = 'snapshot-item';
+        li.innerHTML =
+          '<div class="snap-thumb">🔳</div>' +
+          '<div class="snap-info">' +
+            '<div class="snap-id">' + escapeHtml(snap.id) + '</div>' +
+            '<div class="snap-sub">' +
+              '<span class="chip">' + escapeHtml(formatDate(snap.createdAt)) + '</span>' +
+              '<span class="chip">' + (snap.links ? snap.links.length : 0) + ' links</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="snap-actions">' +
+            '<button class="icon-btn" data-snap-action="view" data-id="' + escapeHtml(snap.id) + '" title="View QR">👁</button>' +
+            '<button class="icon-btn" data-snap-action="copy" data-id="' + escapeHtml(snap.id) + '" title="Copy link">📋</button>' +
+            '<button class="icon-btn danger" data-snap-action="delete" data-id="' + escapeHtml(snap.id) + '" title="Delete">✕</button>' +
+          '</div>';
+        snapList.appendChild(li);
+      });
+      snapCount.textContent = String(snaps.length);
+      snapEmpty.classList.toggle('hidden', snaps.length > 0);
+    }
+
+    if (saveSnapBtn) {
+      saveSnapBtn.addEventListener('click', function () {
+        if (!links.length) return;
+        if (!confirm('Save this QR to history and clear your current links to start a new one?')) return;
+
+        const snaps = loadSnapshots();
+        const snap = {
+          id: generateSnapshotId(),
+          createdAt: Date.now(),
+          links: links.slice(),
+          profile: Object.assign({}, profile)
+        };
+        snaps.push(snap);
+        saveSnapshots(snaps);
+
+        // Clear current links so user can build a fresh one
+        links = [];
+        saveLinks(links);
+        renderList();
+        renderSnapshots();
+        showToast('Saved as ' + snap.id);
+      });
+    }
+
+    snapList.addEventListener('click', function (e) {
+      const btn = e.target.closest('button[data-snap-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.snapAction;
+      const snaps = loadSnapshots();
+      const snap = snaps.find(function (s) { return s.id === id; });
+      if (!snap) return;
+
+      if (action === 'delete') {
+        if (!confirm('Delete saved QR ' + id + '?')) return;
+        saveSnapshots(snaps.filter(function (s) { return s.id !== id; }));
+        renderSnapshots();
+        showToast('Deleted ' + id);
+      } else if (action === 'copy') {
+        const url = buildPublicUrl(snap.links, snap.profile);
+        copyText(url, 'Link for ' + id + ' copied!');
+      } else if (action === 'view') {
+        openSnapshotModal(snap);
+      }
+    });
+
+    /* ---- View snapshot modal ---- */
+    function openSnapshotModal(snap) {
+      const m = document.getElementById('viewSnapModal');
+      if (!m) return;
+      const url = buildPublicUrl(snap.links, snap.profile);
+      document.getElementById('snapModalTitle').textContent = snap.id;
+      document.getElementById('snapModalDate').textContent = formatDate(snap.createdAt);
+      document.getElementById('snapModalCount').textContent = String(snap.links.length);
+
+      const qrBox = document.getElementById('snapQrcode');
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: '#1b1f2a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      const openBtn = document.getElementById('snapOpenBtn');
+      openBtn.href = url;
+
+      // Re-bind download / copy
+      const dl = document.getElementById('snapDownloadBtn');
+      const cp = document.getElementById('snapCopyBtn');
+      const newDl = dl.cloneNode(true); dl.parentNode.replaceChild(newDl, dl);
+      const newCp = cp.cloneNode(true); cp.parentNode.replaceChild(newCp, cp);
+      newDl.addEventListener('click', function () {
+        const img = qrBox.querySelector('img');
+        const canvas = qrBox.querySelector('canvas');
+        const dataUrl = (img && img.src) || (canvas && canvas.toDataURL('image/png')) || '';
+        if (!dataUrl) { showToast('QR not ready'); return; }
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = snap.id + '.png';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast('Downloaded ' + snap.id);
+      });
+      newCp.addEventListener('click', function () { copyText(url, 'Link copied!'); });
+
+      m.classList.remove('hidden');
+    }
+
+    // Close handlers for snapshot modal
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.dataset && e.target.dataset.closeSnap === '1') {
+        document.getElementById('viewSnapModal').classList.add('hidden');
+      }
+    });
 
     /* ---- Modal ---- */
     function openModal(opts) {
@@ -734,6 +968,7 @@
 
     renderGrid('');
     renderList();
+    renderSnapshots();
   }
 
   /* ============================================
