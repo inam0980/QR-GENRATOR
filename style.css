@@ -1100,18 +1100,93 @@ button { font-family: inherit; }
 .field label { font-size: 0.8rem; font-weight: 500; color: var(--text-soft); }
 .field input {
   font-family: inherit;
-  font-size: 0.95rem;
-  padding: 11px 13px;
+  font-size: 16px; /* 16px+ prevents iOS Safari zoom-on-focus */
+  padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .field input:focus {
   border-color: var(--orange);
   box-shadow: 0 0 0 3px rgba(255, 122, 24, 0.15);
+}
+
+/* ============================================
+   Mobile-first welcome / auth fixes
+   ============================================ */
+@media (max-width: 520px) {
+  .welcome { padding: 12px; align-items: flex-start; padding-top: 24px; }
+
+  .welcome-card {
+    border-radius: 20px;
+    padding: 22px 18px 18px;
+    box-shadow: 0 16px 36px rgba(20, 30, 60, 0.16);
+  }
+
+  .brand-mark.big {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+    border-radius: 16px;
+  }
+  .welcome-logo { margin-bottom: 10px; }
+
+  .welcome-title { font-size: 1.3rem; line-height: 1.25; }
+  .welcome-sub { font-size: 0.86rem; margin-bottom: 16px; }
+
+  .auth-tabs { margin-bottom: 16px; }
+  .auth-tab { padding: 9px 12px; font-size: 0.86rem; }
+
+  .welcome-form { gap: 10px; }
+  .welcome-form .field label { font-size: 0.82rem; }
+  .field-hint { font-size: 0.72rem; }
+
+  .btn.block { padding: 13px 18px; font-size: 0.98rem; }
+  .welcome-foot { font-size: 0.74rem; }
+
+  /* Token modal — keep readable on narrow phones */
+  .token-card { padding: 22px 16px 16px; border-radius: 20px; }
+  .token-celebrate { font-size: 40px; }
+  .token-card h3 { font-size: 1.2rem; }
+  .token-warn { font-size: 0.8rem; padding: 9px 12px; }
+  .token-label { font-size: 0.68rem; }
+  .token-display {
+    font-size: 2.4rem;
+    letter-spacing: 0.3em;
+    padding: 16px 0;
+    border-radius: 14px;
+  }
+  .token-tips { font-size: 0.74rem; gap: 4px; margin-bottom: 14px; }
+  .modal-actions.center .btn { flex: 1 1 auto; min-width: 0; padding: 11px 14px; font-size: 0.88rem; }
+
+  /* Token input (login) — center digits don't crowd on tiny screens */
+  .token-input {
+    font-size: 1.4rem !important;
+    letter-spacing: 0.55em;
+    padding-left: 0.95em !important;
+  }
+}
+
+/* Extra-narrow phones (Galaxy Fold, etc.) */
+@media (max-width: 360px) {
+  .welcome-card { padding: 18px 14px 14px; }
+  .welcome-title { font-size: 1.15rem; }
+  .token-display { font-size: 2rem; letter-spacing: 0.22em; }
+  .auth-tab { padding: 8px 10px; font-size: 0.8rem; }
+}
+
+/* Landscape phones — let card scroll instead of being cut off */
+@media (max-height: 640px) {
+  .welcome { align-items: flex-start; padding-top: 16px; padding-bottom: 16px; }
+  .welcome-card { padding-top: 18px; padding-bottom: 14px; }
+  .welcome-logo { margin-bottom: 6px; }
+  .brand-mark.big { width: 44px; height: 44px; font-size: 20px; }
 }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
 
